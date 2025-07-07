@@ -22,6 +22,7 @@ import 'package:test_rec/routes/smart_life_page.dart';
 import 'package:test_rec/routes/more_settings_demo_page.dart';
 import 'package:test_rec/routes/toggle_button_demo_page.dart';
 import 'package:test_rec/routes/splash_page.dart';
+import 'add_device_manual_page.dart';
 
 abstract class AppPages {
   static final routes = [
@@ -77,6 +78,10 @@ abstract class AppPages {
     GetPage(
       name: AppRoutes.qrCodeScanner,
       page: () => const QrCodeScannerPage(),
+    ),
+    GetPage(
+      name: AppRoutes.addDeviceManual,
+      page: () => const AddDeviceManualPage(),
     ),
     GetPage(name: AppRoutes.splash, page: () => const SplashPage()),
   ];

@@ -37,4 +37,5 @@ abstract class AppRoutes {
   static const toggleButtonDemo = '/toggle-button-demo';
   static const amapGeofenceTest = '/amap-geofence-test';
   static const splash = '/splash';
+  static const addDeviceManual = '/add_device_manual';
 } 

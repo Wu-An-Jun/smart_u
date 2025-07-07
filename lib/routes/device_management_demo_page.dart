@@ -20,7 +20,9 @@ class _DeviceManagementDemoPageState extends State<DeviceManagementDemoPage> {
   void initState() {
     super.initState();
     // 默认先清空设备，展示空状态
-    controller.clearAllDevices();
+    WidgetsBinding.instance.addPostFrameCallback((_) async {
+      await controller.clearAllDevices();
+    });
   }
 
   @override
@@ -344,7 +346,7 @@ class _DeviceManagementDemoPageState extends State<DeviceManagementDemoPage> {
   }
 
   /// 清空设备
-  void _clearDevices() {
-    controller.clearAllDevices();
+  Future<void> _clearDevices() async {
+    await controller.clearAllDevices();
   }
 } 

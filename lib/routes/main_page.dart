@@ -36,6 +36,25 @@ class _MainPageState extends State<MainPage> {
     );
   }
 
+  @override
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final args = ModalRoute.of(context)?.settings.arguments as Map<String, dynamic>?;
+    if (args != null && args['selectedIndex'] != null) {
+      final int newIndex = args['selectedIndex'] as int;
+      if (newIndex != _currentIndex) {
+        setState(() {
+          _currentIndex = newIndex;
+        });
+        WidgetsBinding.instance.addPostFrameCallback((_) {
+          if (mounted) {
+            _pageController.jumpToPage(newIndex);
+          }
+        });
+      }
+    }
+  }
+
   /// 更新系统UI样式
   void _updateSystemUIStyle() {
     final isDark = Global.currentTheme.isDark;

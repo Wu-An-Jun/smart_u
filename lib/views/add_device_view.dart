@@ -5,6 +5,7 @@ import 'package:get/get.dart';
 import '../controllers/device_controller.dart';
 import '../models/device_model.dart';
 import '../routes/app_routes.dart';
+import '../routes/device_match_success_page.dart';
 
 const String kImgPath = 'imgs/';
 
@@ -15,22 +16,48 @@ class AddDeviceView extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
+    final pageContext = context;
     final DeviceController controller = Get.find<DeviceController>();
     return Column(
       children: [
         // const SizedBox(height: 24),
-        _buildAppBar(context),
+        _buildAppBar(pageContext),
         Padding(
           padding: const EdgeInsets.symmetric(horizontal: 10),
-          child: Column(
-            children: [
-              const SizedBox(height: 12),
-              _buildBluetoothCard(controller),
-              const SizedBox(height: 0),
-              _buildActionRow(context, controller),
-              _buildCancelButton(controller),
-            ],
-          ),
+          child: Obx(() {
+            final isScanning = controller.isScanning;
+            final hasNewDevice = controller.devices.isNotEmpty;
+            // 三态切换
+            if (isScanning) {
+              return Column(
+                children: [
+                  const SizedBox(height: 12),
+                  _buildBluetoothCard(controller),
+                  const SizedBox(height: 0),
+                  _buildActionRow(pageContext, controller),
+                  _buildCancelButton(controller),
+                ],
+              );
+            } else if (!isScanning && !hasNewDevice) {
+              return Column(
+                children: [
+                  const SizedBox(height: 12),
+                  _buildBluetoothNotFoundCard(controller, pageContext),
+                  const SizedBox(height: 0),
+                  _buildActionRow(pageContext, controller),
+                ],
+              );
+            } else {
+              return Column(
+                children: [
+                  const SizedBox(height: 12),
+                  _buildBluetoothIconButton(controller, pageContext),
+                  const SizedBox(height: 0),
+                  _buildActionRow(pageContext, controller),
+                ],
+              );
+            }
+          }),
         ),
         _buildProgressRow(),
       ],
@@ -127,8 +154,18 @@ class AddDeviceView extends StatelessWidget {
               svgUrl: 'action_manual.svg',
               title: '手动输入',
               subtitle: '输入设备序列号',
-              onTap: _onManualAdd,
+              onTap: () => Navigator.of(context).pushNamed('/add_device_manual'),
               bgColor: const Color(0x4DFA9015),
+            ),
+          ),
+          const SizedBox(width: 16),
+          Expanded(
+            child: _buildActionCard(
+              svgUrl: 'device_card_icon.svg',
+              title: '添加定位器',
+              subtitle: '一键添加定位器',
+              onTap: () => _onAddPetTracker(context, controller),
+              bgColor: const Color(0xFFB3E5FC),
             ),
           ),
         ],
@@ -265,6 +302,147 @@ class AddDeviceView extends StatelessWidget {
     );
   }
 
+  /// 蓝牙入口按钮（卡片包裹，风格统一）
+  Widget _buildBluetoothIconButton(DeviceController controller, BuildContext pageContext) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 2,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      child: Column(
+        children: [
+          const SizedBox(height: 24),
+          const Text(
+            '蓝牙自动搜索',
+            style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '点击下方蓝牙图标开始搜索',
+            style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
+          ),
+          const SizedBox(height: 16),
+          GestureDetector(
+            onTap: () => controller.startScanning(
+              pageContext,
+              (device) => _onDeviceFound(pageContext, controller, device),
+            ),
+            child: Container(
+              width: 114,
+              height: 114,
+              decoration: const BoxDecoration(
+                color: Color(0xFF3B82F6),
+                shape: BoxShape.circle,
+              ),
+              child: Center(
+                child: SvgPicture.asset(
+                  '${kImgPath}bluetooth_device.svg',
+                  width: 64,
+                  height: 64,
+                ),
+              ),
+            ),
+          ),
+          const SizedBox(height: 24),
+        ],
+      ),
+    );
+  }
+
+  /// 蓝牙未发现设备卡片
+  Widget _buildBluetoothNotFoundCard(DeviceController controller, BuildContext pageContext) {
+    return Container(
+      width: double.infinity,
+      decoration: BoxDecoration(
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: [
+          BoxShadow(
+            color: Colors.black.withOpacity(0.05),
+            blurRadius: 2,
+            offset: const Offset(0, 1),
+          ),
+        ],
+      ),
+      padding: const EdgeInsets.symmetric(vertical: 32, horizontal: 24),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          const Text(
+            '蓝牙自动搜索',
+            style: TextStyle(
+              color: Colors.black,
+              fontWeight: FontWeight.w600,
+              fontSize: 16,
+            ),
+          ),
+          const SizedBox(height: 24),
+          Container(
+            decoration: const BoxDecoration(
+              color: Color(0xFFEF4444),
+              shape: BoxShape.circle,
+            ),
+            padding: const EdgeInsets.all(20),
+            child: SvgPicture.asset(
+              '${kImgPath}bluetooth_device.svg',
+              width: 40,
+              height: 40,
+              color: Colors.white,
+            ),
+          ),
+          const SizedBox(height: 16),
+          const Text(
+            '未发现设备',
+            style: TextStyle(
+              color: Color(0xFFEF4444),
+              fontWeight: FontWeight.w600,
+              fontSize: 18,
+            ),
+          ),
+          const SizedBox(height: 8),
+          const Text(
+            '请确保设备已开启并在有效距离内',
+            style: TextStyle(
+              color: Color(0xFF6B7280),
+              fontWeight: FontWeight.w400,
+              fontSize: 14,
+            ),
+          ),
+          const SizedBox(height: 20),
+          GestureDetector(
+            onTap: () => controller.startScanning(
+              pageContext,
+              (device) => _onDeviceFound(pageContext, controller, device),
+            ),
+            child: Container(
+              decoration: BoxDecoration(
+                color: const Color(0xFF3B82F6),
+                borderRadius: BorderRadius.circular(9999),
+              ),
+              padding: const EdgeInsets.symmetric(horizontal: 32, vertical: 12),
+              child: const Text(
+                '重新搜索',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontWeight: FontWeight.w500,
+                  fontSize: 16,
+                ),
+              ),
+            ),
+          ),
+        ],
+      ),
+    );
+  }
+
   void _onQrCodeAdd(BuildContext context, DeviceController controller) async {
     final result = await Get.toNamed(AppRoutes.qrCodeScanner);
     if (result != null && result is String && result.isNotEmpty) {
@@ -287,14 +465,7 @@ class AddDeviceView extends StatelessWidget {
         lastSeen: DateTime.now(),
         description: '通过扫描二维码添加的设备\n二维码内容: $qrData',
       );
-      controller.addDevice(newDevice);
-      Get.snackbar(
-        '添加成功',
-        '已成功添加设备: ${newDevice.name}',
-        backgroundColor: const Color(0xFF10B981),
-        colorText: Colors.white,
-      );
-      if (onBack != null) onBack!();
+      _onDeviceFound(context, controller, newDevice);
     } catch (e) {
       Get.snackbar(
         '添加失败',
@@ -305,13 +476,42 @@ class AddDeviceView extends StatelessWidget {
     }
   }
 
-  void _onManualAdd() {
+  void _onDeviceFound(BuildContext pageContext, DeviceController controller, DeviceModel device) async {
+    if (pageContext is Element && !(pageContext as Element).mounted) return;
+    await Navigator.of(pageContext).push(
+      MaterialPageRoute(
+        builder: (_) => DeviceMatchSuccessPage(
+          deviceName: device.name,
+          model: device.type.toString(), // 你可根据实际字段调整
+          battery: 95, // 如有电量字段请替换
+          onBindComplete: (String newName) async {
+            final updatedDevice = device.copyWith(name: newName);
+            await controller.addDevice(updatedDevice);
+            if (onBack != null) onBack!(); // 只调用回调，不再pop
+          },
+        ),
+      ),
+    );
+  }
+
+  void _onAddPetTracker(BuildContext context, DeviceController controller) async {
+    final newDevice = DeviceModel(
+      id: 'pettracker_${DateTime.now().millisecondsSinceEpoch}',
+      name: '定位器',
+      type: DeviceType.petTracker,
+      category: DeviceCategory.pet,
+      isOnline: true,
+      lastSeen: DateTime.now(),
+      description: '测试用定位器设备',
+    );
+    await controller.addDevice(newDevice);
     Get.snackbar(
-      '功能开发中',
-      '手动添加功能正在开发中...',
-      backgroundColor: const Color(0xFF8B5CF6),
+      '添加成功',
+      '已成功添加定位器:  A0${newDevice.name}',
+      backgroundColor: const Color(0xFF10B981),
       colorText: Colors.white,
     );
+    if (onBack != null) onBack!();
   }
 }
 

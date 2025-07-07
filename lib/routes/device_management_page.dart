@@ -1,17 +1,17 @@
 import 'package:flutter/material.dart';
+import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
 import '../common/Global.dart';
 import '../controllers/device_controller.dart';
 import '../models/device_model.dart';
+import '../routes/app_routes.dart';
+import '../views/add_device_view.dart';
 import '../widgets/center_popup.dart';
 import '../widgets/geofence_map_widget.dart';
 import '../widgets/more_settings_dialog.dart';
 import '../widgets/positioning_mode_selector.dart';
-import '../widgets/toggle_button.dart';
 import 'geofence_management_page.dart';
-import '../routes/app_routes.dart';
-import '../views/add_device_view.dart';
 
 class DeviceManagementPage extends StatefulWidget {
   const DeviceManagementPage({super.key});
@@ -49,7 +49,7 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
         _showAddDeviceView.value = true;
       });
     }
-    
+
     // 检查是否需要直接显示猫咪定位器界面
     if (arguments != null && arguments['showCatLocator'] == true) {
       // 延迟一帧执行，确保widget构建完成
@@ -73,9 +73,12 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
 
   /// 返回原界面
   void _backToDeviceList() {
-    _showCatLocatorView.value = false;
-    _showPositioningModeSelector.value = false;
-    _showAddDeviceView.value = false;
+    setState(() {
+      _showCatLocatorView.value = false;
+      _showPositioningModeSelector.value = false;
+      _showAddDeviceView.value = false;
+    });
+    Navigator.of(context).maybePop();
   }
 
   /// 切换远程开关状态
@@ -177,9 +180,7 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
 
                 // 根据当前状态显示不同的界面
                 if (_showAddDeviceView.value) {
-                  return AddDeviceView(
-                    onBack: _backToDeviceList,
-                  );
+                  return AddDeviceView(onBack: _backToDeviceList);
                 } else if (_showPositioningModeSelector.value) {
                   return _buildPositioningModeSelectorView();
                 } else if (_showCatLocatorView.value) {
@@ -595,8 +596,8 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
   }
 
   /// 清空所有设备（用于演示状态切换）
-  void _clearAllDevices() {
-    Get.dialog(
+  Future<void> _clearAllDevices() async {
+    await Get.dialog(
       AlertDialog(
         shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(16)),
         title: const Text('清空设备'),
@@ -604,8 +605,8 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
         actions: [
           TextButton(onPressed: () => Get.back(), child: const Text('取消')),
           ElevatedButton(
-            onPressed: () {
-              controller.clearAllDevices();
+            onPressed: () async {
+              await controller.clearAllDevices();
               Get.back();
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),
@@ -629,13 +630,13 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
         children: [
           // 标题栏
           Container(
-            height: 30,
-            padding: const EdgeInsets.symmetric(horizontal: 16),
+            height: 56,
+            padding: const EdgeInsets.symmetric(horizontal: 0),
             decoration: BoxDecoration(
               color: Global.currentTheme.backgroundColor,
               boxShadow: [
                 BoxShadow(
-                  color: Global.currentTheme.backgroundColor.withOpacity(0.3),
+                  color: Colors.black.withOpacity(0.08),
                   blurRadius: 8,
                   offset: const Offset(0, 3),
                 ),
@@ -644,30 +645,35 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
             child: Row(
               children: [
                 // 返回按钮
-                GestureDetector(
-                  onTap: () {
-                    print('返回按钮被点击'); // 调试信息
-                    _backToDeviceList();
-                  },
-                  child: Container(
-                    width: 48,
-                    height: 48,
-                    decoration: BoxDecoration(
-                      color: Colors.white.withOpacity(0.2),
-                      borderRadius: BorderRadius.circular(12),
-                      border: Border.all(
-                        color: Colors.white.withOpacity(0.3),
-                        width: 1,
+                Padding(
+                  padding: const EdgeInsets.only(left: 8),
+                  child: GestureDetector(
+                    onTap: () {
+                      print('返回按钮被点击');
+                      _backToDeviceList();
+                    },
+                    child: Container(
+                      width: 40,
+                      height: 40,
+                      decoration: BoxDecoration(
+                        color: Colors.white.withOpacity(0.12),
+                        borderRadius: BorderRadius.circular(12),
+                        border: Border.all(
+                          color: Colors.white.withOpacity(0.18),
+                          width: 1,
+                        ),
                       ),
-                    ),
-                    child: const Icon(
-                      Icons.arrow_back_ios_new,
-                      size: 22,
-                      color: Colors.white,
+                      child: Center(
+                        child: SvgPicture.asset(
+                          'imgs/nav_back.svg',
+                          width: 22,
+                          height: 22,
+                          color: Colors.white,
+                        ),
+                      ),
                     ),
                   ),
                 ),
-
                 // 标题
                 Expanded(
                   child: Container(
@@ -678,45 +684,35 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
                         fontSize: 18,
                         fontWeight: FontWeight.bold,
                         color: Colors.white,
+                        fontFamily: 'Alibaba PuHuiTi 3.0',
+                        height: 1.2,
                       ),
                     ),
                   ),
                 ),
-
                 // 右侧占位，保持标题居中
                 const SizedBox(width: 48),
               ],
             ),
           ),
-
           // 主要内容区域
           Expanded(
             child: SingleChildScrollView(
               child: Column(
+                crossAxisAlignment: CrossAxisAlignment.stretch,
                 children: [
                   const SizedBox(height: 20),
-
                   // 地图区域
                   _buildMapSection(),
-
                   const SizedBox(height: 24),
-
                   // 功能列表
                   Padding(
-                    padding: const EdgeInsets.symmetric(horizontal: 16),
+                    padding: const EdgeInsets.symmetric(horizontal: 0),
                     child: _buildFunctionList(),
                   ),
-
                   const SizedBox(height: 24),
-
                   // 智能管家
-                  Container(
-                    width: double.infinity,
-                    alignment: Alignment.centerLeft,
-                    padding: const EdgeInsets.only(left: 16, right: 80),
-                    child: _buildSmartButler(),
-                  ),
-
+                  Container(width: double.infinity, child: _buildSmartButler()),
                   const SizedBox(height: 20),
                 ],
               ),
@@ -765,222 +761,159 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
 
   /// 构建功能列表
   Widget _buildFunctionList() {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(
-          '功能列表',
-          style: TextStyle(
-            fontSize: 16,
-            fontWeight: FontWeight.w600,
-            color: Global.currentTextColor,
-          ),
-        ),
-        const SizedBox(height: 12),
-        Container(
-          decoration: BoxDecoration(
-            color: Global.currentTheme.surfaceColor,
-            borderRadius: BorderRadius.circular(12),
-            boxShadow: [
-              BoxShadow(
-                color: Colors.black.withOpacity(0.1),
-                blurRadius: 6,
-                offset: const Offset(0, 3),
-              ),
-            ],
-          ),
-          padding: const EdgeInsets.all(8),
-          child: Row(
-            mainAxisAlignment: MainAxisAlignment.spaceAround,
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(left: 20, right: 20, top: 24),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
             children: [
-              Obx(
-                () => _buildToggleButton(
-                  iconOn: Icons.toggle_on,
-                  iconOff: Icons.toggle_off_outlined,
-                  label: '远程开关',
-                  isOn: _remoteSwitch.value,
-                  onTap: _toggleRemoteSwitch,
+              SvgPicture.asset(
+                'imgs/feature_list_bar.svg',
+                width: 4,
+                height: 24,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                '功能列表',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Alibaba PuHuiTi 3.0',
+                  height: 1.55,
                 ),
               ),
-              _buildFunctionButton(
-                icon: Icons.fence_outlined,
-                label: '电子围栏',
-                onTap: () {
-                  // 获取当前的宠物定位器设备
-                  final petTracker = controller.devices.firstWhere(
-                    (device) => device.type == DeviceType.petTracker,
-                    orElse:
-                        () => DeviceModel(
-                          id: 'pet_tracker_default',
-                          name: '猫咪定位器',
-                          type: DeviceType.petTracker,
-                          category: DeviceCategory.pet,
-                          isOnline: true,
-                          lastSeen: DateTime.now(),
-                        ),
-                  );
-
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(
-                      builder:
-                          (context) => GeofenceManagementPage(
-                            deviceId: petTracker.id,
-                            deviceName: petTracker.name,
-                          ),
-                    ),
-                  );
-                },
-              ),
-              _buildFunctionButton(
-                icon: Icons.location_on_outlined,
-                label: '定位模式',
-                onTap: _showPositioningMode,
-              ),
-              _buildFunctionButton(
-                icon: Icons.settings_outlined,
-                label: '更多设置',
-                onTap: () => _showMoreSettingsDialog(),
-              ),
             ],
           ),
-        ),
-      ],
-    );
-  }
-
-  /// 构建功能按钮
-  Widget _buildFunctionButton({
-    required IconData icon,
-    required String label,
-    required VoidCallback onTap,
-  }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 70,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            Container(
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: Global.currentTheme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-              ),
-              child: Icon(
-                icon,
-                size: 20,
-                color: Global.currentTheme.primaryColor,
-              ),
+          const SizedBox(height: 12),
+          Container(
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(12),
+              boxShadow: [
+                BoxShadow(
+                  color: Colors.black.withOpacity(0.10),
+                  blurRadius: 6,
+                  offset: const Offset(0, 3),
+                ),
+              ],
             ),
-            const SizedBox(height: 8),
-            Text(
-              label,
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: FontWeight.w500,
-                color: Global.currentTextColor,
-              ),
-              textAlign: TextAlign.center,
+            child: Row(
+              children: [
+                _buildFunctionListItem(
+                  svgPath: 'imgs/feature_remote.svg',
+                  label: '远程开关',
+                  bgColor: const Color.fromRGBO(159, 71, 242, 0.3),
+                  onTap: _toggleRemoteSwitch,
+                  iconColor:
+                      _remoteSwitch.value
+                          ? const Color(0xFF9F47F2) // 开：紫色
+                          : const Color(0xFFBDBDBD), // 关：灰色
+                ),
+                _buildVerticalDivider(),
+                _buildFunctionListItem(
+                  svgPath: 'imgs/feature_fence.svg',
+                  label: '电子围栏',
+                  bgColor: const Color.fromRGBO(59, 74, 246, 0.3),
+                  onTap: () {
+                    final petTracker = controller.devices.firstWhere(
+                      (device) => device.type == DeviceType.petTracker,
+                      orElse:
+                          () => DeviceModel(
+                            id: 'pet_tracker_default',
+                            name: '猫咪定位器',
+                            type: DeviceType.petTracker,
+                            category: DeviceCategory.pet,
+                            isOnline: true,
+                            lastSeen: DateTime.now(),
+                          ),
+                    );
+                    Navigator.push(
+                      context,
+                      MaterialPageRoute(
+                        builder:
+                            (context) => GeofenceManagementPage(
+                              deviceId: petTracker.id,
+                              deviceName: petTracker.name,
+                            ),
+                      ),
+                    );
+                  },
+                ),
+                _buildVerticalDivider(),
+                _buildFunctionListItem(
+                  svgPath: 'imgs/feature_location_mode.svg',
+                  label: '定位模式',
+                  bgColor: const Color.fromRGBO(236, 162, 91, 0.3),
+                  onTap: _showPositioningMode,
+                ),
+                _buildVerticalDivider(),
+                _buildFunctionListItem(
+                  svgPath: 'imgs/feature_more.svg',
+                  label: '更多设置',
+                  bgColor: const Color(0xFFE5E7EB),
+                  onTap: _showMoreSettingsDialog,
+                ),
+              ],
             ),
-          ],
-        ),
+          ),
+        ],
       ),
     );
   }
 
-  /// 构建切换按钮（与功能按钮布局一致）
-  Widget _buildToggleButton({
-    required IconData iconOn,
-    required IconData iconOff,
+  Widget _buildVerticalDivider() {
+    return Container(width: 1, height: 88, color: const Color(0xFFF3F4F6));
+  }
+
+  Widget _buildFunctionListItem({
+    required String svgPath,
     required String label,
-    required bool isOn,
+    required Color bgColor,
     required VoidCallback onTap,
+    Color? iconColor,
   }) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Container(
-        width: 70,
-        child: Column(
-          mainAxisSize: MainAxisSize.min,
-          children: [
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              width: 32,
-              height: 32,
-              decoration: BoxDecoration(
-                color: isOn
-                    ? Global.currentTheme.primaryColor.withOpacity(0.2)
-                    : Global.currentTheme.primaryColor.withOpacity(0.1),
-                borderRadius: BorderRadius.circular(8),
-                border: Border.all(
-                  color: isOn
-                      ? Global.currentTheme.primaryColor
-                      : Global.currentTheme.primaryColor.withOpacity(0.3),
-                  width: isOn ? 2 : 1,
+    return Expanded(
+      child: GestureDetector(
+        onTap: onTap,
+        child: Container(
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          color: Colors.transparent,
+          child: Column(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: bgColor,
+                  borderRadius: BorderRadius.circular(9999),
                 ),
-                boxShadow: isOn
-                    ? [
-                        BoxShadow(
-                          color: Global.currentTheme.primaryColor.withOpacity(0.3),
-                          blurRadius: 6,
-                          offset: const Offset(0, 2),
-                        ),
-                      ]
-                    : null,
-              ),
-              child: AnimatedSwitcher(
-                duration: const Duration(milliseconds: 200),
-                child: Icon(
-                  isOn ? iconOn : iconOff,
-                  key: ValueKey(isOn),
-                  size: 20,
-                  color: isOn
-                      ? Global.currentTheme.primaryColor
-                      : Global.currentTheme.primaryColor.withOpacity(0.7),
+                child: Center(
+                  child: SvgPicture.asset(
+                    svgPath,
+                    width: 20,
+                    height: 20,
+                    color: iconColor,
+                  ),
                 ),
               ),
-            ),
-            const SizedBox(height: 8),
-            AnimatedDefaultTextStyle(
-              duration: const Duration(milliseconds: 200),
-              style: TextStyle(
-                fontSize: 12,
-                fontWeight: isOn ? FontWeight.w600 : FontWeight.w500,
-                color: isOn
-                    ? Global.currentTextColor
-                    : Global.currentTextColor.withOpacity(0.8),
-              ),
-              child: Text(
+              const SizedBox(height: 8),
+              Text(
                 label,
+                style: const TextStyle(
+                  color: Color(0xFF1F2937),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
+                  fontFamily: 'Alibaba PuHuiTi 3.0',
+                  height: 1.42,
+                ),
                 textAlign: TextAlign.center,
               ),
-            ),
-            // 状态指示器
-            const SizedBox(height: 4),
-            AnimatedContainer(
-              duration: const Duration(milliseconds: 300),
-              width: 4,
-              height: 4,
-              decoration: BoxDecoration(
-                color: isOn
-                    ? Global.currentTheme.primaryColor
-                    : Colors.grey.shade400,
-                shape: BoxShape.circle,
-                boxShadow: isOn
-                    ? [
-                        BoxShadow(
-                          color: Global.currentTheme.primaryColor.withOpacity(0.5),
-                          blurRadius: 3,
-                          spreadRadius: 1,
-                        ),
-                      ]
-                    : null,
-              ),
-            ),
-          ],
+            ],
+          ),
         ),
       ),
     );
@@ -988,41 +921,52 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
 
   /// 构建智能管家
   Widget _buildSmartButler() {
-    return SizedBox(
-      width: MediaQuery.of(Get.context!).size.width * 0.7, // 限制宽度为屏幕的70%
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.only(left: 20, right: 20, top: 24),
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.start,
         mainAxisSize: MainAxisSize.min,
         children: [
-          Text(
-            '智能管家',
-            style: TextStyle(
-              fontSize: 16,
-              fontWeight: FontWeight.w600,
-              color: Global.currentTextColor,
-            ),
-          ),
-          const SizedBox(height: 12),
-          Container(
-            width: double.infinity,
-            decoration: BoxDecoration(
-              color: Global.currentTheme.surfaceColor,
-              borderRadius: BorderRadius.circular(12),
-              boxShadow: [
-                BoxShadow(
-                  color: Colors.black.withOpacity(0.1),
-                  blurRadius: 6,
-                  offset: const Offset(0, 3),
+          Row(
+            children: [
+              SvgPicture.asset(
+                'imgs/feature_list_bar.svg',
+                width: 4,
+                height: 24,
+              ),
+              const SizedBox(width: 8),
+              const Text(
+                '智能管家',
+                style: TextStyle(
+                  color: Colors.white,
+                  fontSize: 18,
+                  fontWeight: FontWeight.w700,
+                  fontFamily: 'Alibaba PuHuiTi 3.0',
+                  height: 1.55,
                 ),
-              ],
-            ),
-            padding: const EdgeInsets.all(16),
-            child: Obx(
-              () => Wrap(
-                alignment: WrapAlignment.start, // 确保Wrap内容靠左对齐
-                spacing: 12,
-                runSpacing: 12,
-                children: _tasks.map((task) => _buildTaskChip(task)).toList(),
+              ),
+            ],
+          ),
+          // const SizedBox(height: 12),
+          // 用Column渲染所有任务项，保证每个任务项宽度拉满
+          Obx(
+            () => Column(
+              children: List.generate(
+                _tasks.length,
+                (i) => Column(
+                  children: [
+                    _buildTaskListItem(
+                      _tasks[i],
+                      svgPath:
+                          i == 0
+                              ? 'imgs/smart_butler_msg.svg'
+                              : 'imgs/smart_butler_time.svg',
+                      onTap: () => _removeTask(_tasks[i]),
+                    ),
+                    if (i != _tasks.length - 1) const SizedBox(height: 12),
+                  ],
+                ),
               ),
             ),
           ),
@@ -1031,37 +975,52 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
     );
   }
 
-  /// 构建任务芯片
-  Widget _buildTaskChip(String task) {
+  Widget _buildTaskListItem(
+    String task, {
+    required String svgPath,
+    required VoidCallback onTap,
+  }) {
+    if (task.isEmpty) return const SizedBox.shrink();
     return Container(
+      width: double.infinity, // 拉满父容器宽度
       decoration: BoxDecoration(
-        color: Global.currentTheme.surfaceColor,
-        border: Border.all(
-          color: Global.currentTheme.primaryColor.withOpacity(0.3),
-        ),
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.white,
+        border: Border.all(color: const Color(0xFFF9FAFB), width: 1),
+        borderRadius: BorderRadius.circular(12),
+        boxShadow: const [
+          BoxShadow(
+            color: Color.fromRGBO(0, 0, 0, 0.10),
+            blurRadius: 6,
+            offset: Offset(0, 3),
+          ),
+        ],
       ),
+      padding: const EdgeInsets.symmetric(horizontal: 17, vertical: 17),
+      margin: EdgeInsets.zero,
       child: Row(
-        mainAxisSize: MainAxisSize.min,
+        mainAxisAlignment: MainAxisAlignment.spaceBetween,
         children: [
-          Padding(
-            padding: const EdgeInsets.only(left: 16, top: 6, bottom: 6),
+          Expanded(
             child: Text(
               task,
-              style: TextStyle(fontSize: 14, color: Global.currentTextColor),
+              style: const TextStyle(
+                color: Color(0xFF1F2937),
+                fontSize: 16,
+                fontWeight: FontWeight.w500,
+                fontFamily: 'Alibaba PuHuiTi 3.0',
+                height: 1.5,
+              ),
+              overflow: TextOverflow.ellipsis,
+              maxLines: 1,
             ),
           ),
           GestureDetector(
-            onTap: () => _removeTask(task),
-            child: Container(
-              margin: const EdgeInsets.only(left: 8, right: 8),
-              width: 16,
-              height: 16,
-              decoration: BoxDecoration(
-                color: Global.currentTheme.primaryColor.withOpacity(0.6),
-                shape: BoxShape.circle,
-              ),
-              child: const Icon(Icons.close, size: 12, color: Colors.white),
+            onTap: onTap,
+            child: SvgPicture.asset(
+              svgPath,
+              width: 20,
+              height: 20,
+              color: const Color(0xFF9CA3AF),
             ),
           ),
         ],
@@ -1124,11 +1083,7 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
                 color: Global.currentTheme.primaryColor.withOpacity(0.1),
                 shape: BoxShape.circle,
               ),
-              child: Icon(
-                Icons.arrow_back,
-                color: Global.currentTheme.primaryColor,
-                size: 24,
-              ),
+              child: Icon(Icons.arrow_back, color: Colors.white, size: 24),
             ),
           ),
           const SizedBox(width: 12),

@@ -17,8 +17,8 @@ class AppState extends ChangeNotifier {
   // 主题相关
   ThemeMode _themeMode = ThemeMode.light;
   bool _isDarkMode = false;
-  int _currentThemeIndex = 3; // 当前主题索引，默认为蓝绿色主题
-  ThemeConfig _currentThemeConfig = ThemeManager.availableThemes[3];
+  int _currentThemeIndex = 0; // 当前主题索引，默认为深蓝色主题
+  ThemeConfig _currentThemeConfig = ThemeManager.availableThemes[0];
   
   // 网络状态
   bool _isOnline = true;
@@ -35,7 +35,7 @@ class AppState extends ChangeNotifier {
     'vibration_enabled': true,
     'language': 'zh-CN',
     'font_size': 'medium',
-    'theme_index': 3,
+    'theme_index': 0, // 默认深蓝色主题
   };
 
   // Getters

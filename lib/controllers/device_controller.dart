@@ -143,8 +143,29 @@ class DeviceController extends GetxController {
   }
 
   /// 清空所有设备
-  void clearAllDevices() {
-    _devices.clear();
+  Future<void> clearAllDevices() async {
+    try {
+      _setLoading(true);
+      _clearError();
+      await repository.clearAllDevices();
+      _loadDevicesFromRepository();
+      Get.snackbar(
+        '成功',
+        '所有设备已清空',
+        backgroundColor: Get.theme.primaryColor,
+        colorText: Get.theme.colorScheme.onPrimary,
+      );
+    } catch (e) {
+      _setError(e.toString());
+      Get.snackbar(
+        '错误',
+        e.toString(),
+        backgroundColor: Get.theme.colorScheme.error,
+        colorText: Get.theme.colorScheme.onError,
+      );
+    } finally {
+      _setLoading(false);
+    }
   }
 
   /// 更新设备在线状态
@@ -179,7 +200,7 @@ class DeviceController extends GetxController {
   }
 
   /// 开始扫描设备
-  Future<void> startScanning() async {
+  Future<void> startScanning(BuildContext context, void Function(DeviceModel) onDeviceFound) async {
     try {
       _setScanning(true);
       _clearError();
@@ -195,13 +216,7 @@ class DeviceController extends GetxController {
         lastSeen: DateTime.now(),
         description: '扫描发现的设备',
       );
-      await addDevice(discoveredDevice);
-      Get.snackbar(
-        '发现设备',
-        '找到新设备：${discoveredDevice.name}',
-        backgroundColor: const Color(0xFF10B981),
-        colorText: Colors.white,
-      );
+      onDeviceFound(discoveredDevice);
     } catch (e) {
       _setError(e.toString());
     } finally {
