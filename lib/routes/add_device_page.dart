@@ -2,6 +2,8 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../controllers/device_controller.dart';
+import '../models/device_model.dart';
+import 'app_routes.dart';
 
 /// 添加设备页面
 class AddDevicePage extends StatefulWidget {
@@ -228,13 +230,55 @@ class _AddDevicePageState extends State<AddDevicePage> {
   }
 
   /// 扫码添加
-  void _onQrCodeAdd() {
-    Get.snackbar(
-      '功能开发中',
-      '扫码添加功能正在开发中...',
-      backgroundColor: const Color(0xFF8B5CF6),
-      colorText: Colors.white,
-    );
+  void _onQrCodeAdd() async {
+    final result = await Get.toNamed(AppRoutes.qrCodeScanner);
+    
+    if (result != null && result is String && result.isNotEmpty) {
+      // 处理扫描结果
+      _processQrCodeResult(result);
+    }
+  }
+
+  /// 处理二维码扫描结果
+  void _processQrCodeResult(String qrData) {
+    try {
+      // 尝试解析二维码数据
+      // 这里假设二维码包含设备信息的JSON字符串
+      // 实际应用中可能需要根据您的业务逻辑进行调整
+      
+      // 示例：创建一个新设备
+      final newDevice = DeviceModel(
+        id: 'qr_${DateTime.now().millisecondsSinceEpoch}',
+        name: '扫码添加设备',
+        type: DeviceType.smartSwitch, // 默认类型
+        category: DeviceCategory.living, // 默认类别
+        isOnline: true,
+        lastSeen: DateTime.now(),
+        description: '通过扫描二维码添加的设备\n二维码内容: $qrData',
+      );
+      
+      // 添加设备
+      controller.addDevice(newDevice);
+      
+      // 显示成功提示
+      Get.snackbar(
+        '添加成功',
+        '已成功添加设备: ${newDevice.name}',
+        backgroundColor: const Color(0xFF10B981),
+        colorText: Colors.white,
+      );
+      
+      // 返回设备列表页面
+      Get.back();
+    } catch (e) {
+      // 显示错误提示
+      Get.snackbar(
+        '添加失败',
+        '无法解析二维码数据: ${e.toString()}',
+        backgroundColor: Colors.red,
+        colorText: Colors.white,
+      );
+    }
   }
 
   /// 手动添加

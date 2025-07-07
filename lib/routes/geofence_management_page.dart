@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 import '../common/Global.dart';
-import '../common/geofence_service.dart';
+import '../common/amap_geofence_service.dart';
 import '../models/geofence_model.dart';
 import 'geofence_creation_page.dart';
 
@@ -18,13 +18,34 @@ class GeofenceManagementPage extends StatefulWidget {
 }
 
 class _GeofenceManagementPageState extends State<GeofenceManagementPage> {
-  final GeofenceService _geofenceService = GeofenceService();
+  final AMapGeofenceService _geofenceService = AMapGeofenceService();
   List<GeofenceModel> _geofences = [];
   bool _isLoading = true;
+  bool _isInitialized = false;
 
   @override
   void initState() {
     super.initState();
+    _initializeService();
+  }
+
+  /// 初始化围栏服务
+  Future<void> _initializeService() async {
+    setState(() {
+      _isLoading = true;
+    });
+
+    if (!_isInitialized) {
+      // 初始化高德地图围栏服务
+      final result = await _geofenceService.initialize();
+      if (result) {
+        _isInitialized = true;
+        print('🏠 高德地图围栏服务初始化成功');
+      } else {
+        print('🏠 高德地图围栏服务初始化失败');
+      }
+    }
+
     _loadGeofences();
   }
 
@@ -34,7 +55,7 @@ class _GeofenceManagementPageState extends State<GeofenceManagementPage> {
       _isLoading = true;
     });
 
-    // 模拟从服务器加载数据
+    // 从高德地图围栏服务加载数据
     Future.delayed(const Duration(milliseconds: 500), () {
       if (mounted) {
         final loadedGeofences = _geofenceService.geofences;
@@ -65,18 +86,29 @@ class _GeofenceManagementPageState extends State<GeofenceManagementPage> {
                 child: const Text('取消'),
               ),
               TextButton(
-                onPressed: () {
-                  _geofenceService.removeGeofence(geofence.id);
-                  _loadGeofences();
-                  Navigator.of(context).pop();
+                onPressed: () async {
+                  final result = await _geofenceService.removeGeofence(geofence.id);
+                  if (result) {
+                    _loadGeofences();
+                    Navigator.of(context).pop();
 
-                  ScaffoldMessenger.of(context).showSnackBar(
-                    SnackBar(
-                      content: Text('已删除围栏 "${geofence.name}"'),
-                      backgroundColor: Colors.orange,
-                      duration: const Duration(seconds: 2),
-                    ),
-                  );
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      SnackBar(
+                        content: Text('已删除围栏 "${geofence.name}"'),
+                        backgroundColor: Colors.orange,
+                        duration: const Duration(seconds: 2),
+                      ),
+                    );
+                  } else {
+                    Navigator.of(context).pop();
+                    ScaffoldMessenger.of(context).showSnackBar(
+                      const SnackBar(
+                        content: Text('删除围栏失败'),
+                        backgroundColor: Colors.red,
+                        duration: Duration(seconds: 2),
+                      ),
+                    );
+                  }
                 },
                 child: const Text('删除', style: TextStyle(color: Colors.red)),
               ),

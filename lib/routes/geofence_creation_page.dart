@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 import '../common/Global.dart';
 import '../models/geofence_model.dart';
-import '../common/geofence_service.dart';
+import '../common/amap_geofence_service.dart';
 import '../widgets/geofence_map_widget.dart';
 import '../widgets/simple_map_widget.dart';
 
@@ -23,12 +23,13 @@ class GeofenceCreationPage extends StatefulWidget {
 
 class _GeofenceCreationPageState extends State<GeofenceCreationPage> {
   final TextEditingController _nameController = TextEditingController();
-  final GeofenceService _geofenceService = GeofenceService();
+  final AMapGeofenceService _geofenceService = AMapGeofenceService();
   
   GeofenceType _selectedType = GeofenceType.circle;
   String _selectedAlert = 'both'; // enter, exit, both
   double _radius = 500.0;
   bool _isLoading = false;
+  bool _isInitialized = false;
   
   // 地图相关状态
   String _mapStatus = '正在加载地图...';
@@ -37,6 +38,28 @@ class _GeofenceCreationPageState extends State<GeofenceCreationPage> {
   LocationPoint? _selectedCenter; // 选中的围栏中心点
   List<LocationPoint> _polygonVertices = []; // 多边形顶点
   bool _useSimpleMap = true; // 是否使用简化地图
+
+  @override
+  void initState() {
+    super.initState();
+    _initializeService();
+  }
+
+  /// 初始化围栏服务
+  Future<void> _initializeService() async {
+    if (!_isInitialized) {
+      // 初始化高德地图围栏服务
+      final result = await _geofenceService.initialize();
+      if (result) {
+        setState(() {
+          _isInitialized = true;
+        });
+        print('🏠 高德地图围栏服务初始化成功');
+      } else {
+        print('🏠 高德地图围栏服务初始化失败');
+      }
+    }
+  }
 
   @override
   void dispose() {
@@ -74,9 +97,6 @@ class _GeofenceCreationPageState extends State<GeofenceCreationPage> {
     });
 
     try {
-      // 模拟保存过程
-      await Future.delayed(const Duration(milliseconds: 800));
-
       // 创建围栏模型
       GeofenceModel geofence;
       if (_selectedType == GeofenceType.circle) {
@@ -125,7 +145,11 @@ class _GeofenceCreationPageState extends State<GeofenceCreationPage> {
       }
 
       // 添加到服务
-      _geofenceService.addGeofence(geofence);
+      final result = await _geofenceService.addGeofence(geofence);
+      
+      if (!result) {
+        throw Exception('添加围栏失败');
+      }
 
       if (mounted) {
         Navigator.of(context).pop(true);
@@ -153,8 +177,6 @@ class _GeofenceCreationPageState extends State<GeofenceCreationPage> {
       }
     }
   }
-
-
 
   /// 构建头部
   Widget _buildHeader() {

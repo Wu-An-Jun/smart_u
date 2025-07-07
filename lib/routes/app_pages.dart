@@ -1,6 +1,7 @@
 import 'package:get/get.dart';
 import 'package:test_rec/routes/add_device_page.dart';
 import 'package:test_rec/routes/ai_assistant_test_page.dart';
+import 'package:test_rec/routes/amap_geofence_test_page.dart';
 import 'package:test_rec/routes/app_routes.dart';
 import 'package:test_rec/routes/assistant_page.dart';
 import 'package:test_rec/routes/automation_creation_page.dart';
@@ -12,7 +13,9 @@ import 'package:test_rec/routes/login_page.dart';
 import 'package:test_rec/routes/main_page.dart';
 import 'package:test_rec/routes/map_page.dart';
 import 'package:test_rec/routes/device_location_map_page.dart';
+import 'package:test_rec/routes/notification_page.dart';
 import 'package:test_rec/routes/profile_page.dart';
+import 'package:test_rec/routes/qr_code_scanner_page.dart';
 import 'package:test_rec/routes/service_page.dart';
 import 'package:test_rec/routes/smart_home_automation_page.dart';
 import 'package:test_rec/routes/smart_life_page.dart';
@@ -40,6 +43,7 @@ abstract class AppPages {
     GetPage(name: AppRoutes.deviceLocationMap, page: () => const DeviceLocationMapPage()),
     GetPage(name: AppRoutes.smartLife, page: () => const SmartLifePage()),
     GetPage(name: AppRoutes.service, page: () => const ServicePage()),
+    GetPage(name: AppRoutes.notifications, page: () => NotificationPage()),
     GetPage(
       name: AppRoutes.aiAssistantTest,
       page: () => const AiAssistantTestPage(),
@@ -65,6 +69,14 @@ abstract class AppPages {
     GetPage(
       name: AppRoutes.toggleButtonDemo,
       page: () => const ToggleButtonDemoPage(),
+    ),
+    GetPage(
+      name: AppRoutes.amapGeofenceTest,
+      page: () => const AMapGeofenceTestPage(),
+    ),
+    GetPage(
+      name: AppRoutes.qrCodeScanner,
+      page: () => const QrCodeScannerPage(),
     ),
   ];
 }

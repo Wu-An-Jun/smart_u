@@ -142,15 +142,7 @@ class _MainPageState extends State<MainPage> {
         child: Container(
           padding: const EdgeInsets.symmetric(vertical: 6, horizontal: 8),
           margin: const EdgeInsets.symmetric(horizontal: 2),
-          decoration: BoxDecoration(
-            color:
-                isSelected
-                    ? (isDark
-                        ? selectedColor.withOpacity(0.15)
-                        : selectedColor.withOpacity(0.1))
-                    : Colors.transparent,
-            borderRadius: BorderRadius.circular(10),
-          ),
+          decoration: BoxDecoration(borderRadius: BorderRadius.circular(10)),
           child: Column(
             mainAxisSize: MainAxisSize.min,
             mainAxisAlignment: MainAxisAlignment.center,

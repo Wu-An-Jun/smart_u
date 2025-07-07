@@ -15,6 +15,7 @@ abstract class AppRoutes {
   static const deviceLocationMap = '/device-location-map';
   static const smartLife = '/smart-life';
   static const service = '/service';
+  static const notifications = '/notifications';
   
   // 智能家居相关路由
   static const smartHome = '/smart-home';
@@ -28,9 +29,11 @@ abstract class AppRoutes {
   static const automationCreation = '/automation-creation';
   static const securityCenter = '/security-center';
   static const energyMonitor = '/energy-monitor';
+  static const qrCodeScanner = '/qr-code-scanner';
   
   // 测试页面
   static const aiAssistantTest = '/ai-assistant-test';
   static const moreSettingsDemo = '/more-settings-demo';
   static const toggleButtonDemo = '/toggle-button-demo';
+  static const amapGeofenceTest = '/amap-geofence-test';
 } 

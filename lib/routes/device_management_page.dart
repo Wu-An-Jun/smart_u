@@ -10,6 +10,7 @@ import '../widgets/more_settings_dialog.dart';
 import '../widgets/positioning_mode_selector.dart';
 import '../widgets/toggle_button.dart';
 import 'geofence_management_page.dart';
+import '../routes/app_routes.dart';
 
 class DeviceManagementPage extends StatefulWidget {
   const DeviceManagementPage({super.key});
@@ -238,6 +239,42 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
                   Icons.more_horiz,
                   color: Colors.white,
                   size: 24,
+                ),
+              ),
+            ),
+            const SizedBox(width: 12),
+            // 通知按钮
+            GestureDetector(
+              onTap: () => _showNotifications(),
+              child: Container(
+                width: 40,
+                height: 40,
+                decoration: BoxDecoration(
+                  color: Global.currentTheme.primaryColor,
+                  shape: BoxShape.circle,
+                ),
+                child: Stack(
+                  children: [
+                    const Center(
+                      child: Icon(
+                        Icons.notifications,
+                        color: Colors.white,
+                        size: 24,
+                      ),
+                    ),
+                    Positioned(
+                      top: 8,
+                      right: 8,
+                      child: Container(
+                        width: 8,
+                        height: 8,
+                        decoration: const BoxDecoration(
+                          color: Colors.red,
+                          shape: BoxShape.circle,
+                        ),
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),
@@ -523,6 +560,14 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
                   },
                 ),
                 ListTile(
+                  leading: const Icon(Icons.map),
+                  title: const Text('高德地图围栏测试'),
+                  onTap: () {
+                    Navigator.pop(context);
+                    Get.toNamed(AppRoutes.amapGeofenceTest);
+                  },
+                ),
+                ListTile(
                   leading: const Icon(Icons.clear_all),
                   title: const Text('清空所有设备'),
                   onTap: () {
@@ -556,6 +601,11 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
         ],
       ),
     );
+  }
+
+  /// 显示通知页面
+  void _showNotifications() {
+    Get.toNamed(AppRoutes.notifications);
   }
 
   /// 构建猫咪定位器界面
