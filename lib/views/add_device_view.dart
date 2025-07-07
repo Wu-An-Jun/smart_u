@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:flutter_svg/flutter_svg.dart';
 import 'package:get/get.dart';
 
-import '../common/Global.dart';
 import '../controllers/device_controller.dart';
 import '../models/device_model.dart';
 import '../routes/app_routes.dart';
@@ -19,22 +18,18 @@ class AddDeviceView extends StatelessWidget {
     final DeviceController controller = Get.find<DeviceController>();
     return Column(
       children: [
-        const SizedBox(height: 24),
+        // const SizedBox(height: 24),
         _buildAppBar(context),
-        Expanded(
-          child: SingleChildScrollView(
-            child: Padding(
-              padding: const EdgeInsets.symmetric(horizontal: 10),
-              child: Column(
-                children: [
-                  const SizedBox(height: 24),
-                  _buildBluetoothCard(controller),
-                  const SizedBox(height: 22),
-                  _buildActionRow(context, controller),
-                  _buildCancelButton(controller),
-                ],
-              ),
-            ),
+        Padding(
+          padding: const EdgeInsets.symmetric(horizontal: 10),
+          child: Column(
+            children: [
+              const SizedBox(height: 12),
+              _buildBluetoothCard(controller),
+              const SizedBox(height: 0),
+              _buildActionRow(context, controller),
+              _buildCancelButton(controller),
+            ],
           ),
         ),
         _buildProgressRow(),
@@ -88,19 +83,17 @@ class AddDeviceView extends StatelessWidget {
       ),
       child: Column(
         children: [
-          const SizedBox(height: 24),
+          const SizedBox(height: 12),
           const Text(
             '蓝牙自动搜索',
             style: TextStyle(fontWeight: FontWeight.w600, fontSize: 16),
           ),
-          const SizedBox(height: 8),
+          const SizedBox(height: 4),
           const Text(
             '请确保设备已开启并在附近',
             style: TextStyle(color: Color(0xFF9CA3AF), fontSize: 14),
           ),
-          const SizedBox(height: 16),
-          _buildBluetoothCircle(),
-          const SizedBox(height: 16),
+          const BluetoothWaveCircle(),
           Obx(() {
             final isScanning = controller.isScanning;
             return Text(
@@ -108,50 +101,7 @@ class AddDeviceView extends StatelessWidget {
               style: const TextStyle(color: Color(0xFF4B5563), fontSize: 16),
             );
           }),
-          const SizedBox(height: 24),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildBluetoothCircle() {
-    return SizedBox(
-      width: 246,
-      height: 246,
-      child: Stack(
-        alignment: Alignment.center,
-        children: [
-          Container(
-            width: 246,
-            height: 246,
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFF93C5FD), width: 4),
-              shape: BoxShape.circle,
-            ),
-          ),
-          Container(
-            width: 178,
-            height: 178,
-            decoration: BoxDecoration(
-              border: Border.all(color: const Color(0xFF60A5FA), width: 4),
-              shape: BoxShape.circle,
-            ),
-          ),
-          Container(
-            width: 114,
-            height: 114,
-            decoration: const BoxDecoration(
-              color: Color(0xFF3B82F6),
-              shape: BoxShape.circle,
-            ),
-            child: Center(
-              child: SvgPicture.asset(
-                '${kImgPath}bluetooth_device.svg',
-                width: 64,
-                height: 64,
-              ),
-            ),
-          ),
+          // const SizedBox(height: 12),
         ],
       ),
     );
@@ -322,7 +272,11 @@ class AddDeviceView extends StatelessWidget {
     }
   }
 
-  void _processQrCodeResult(BuildContext context, DeviceController controller, String qrData) {
+  void _processQrCodeResult(
+    BuildContext context,
+    DeviceController controller,
+    String qrData,
+  ) {
     try {
       final newDevice = DeviceModel(
         id: 'qr_${DateTime.now().millisecondsSinceEpoch}',
@@ -359,4 +313,93 @@ class AddDeviceView extends StatelessWidget {
       colorText: Colors.white,
     );
   }
-} 
+}
+
+/// 动态蓝牙波纹圆圈组件
+class BluetoothWaveCircle extends StatefulWidget {
+  const BluetoothWaveCircle({super.key});
+
+  @override
+  State<BluetoothWaveCircle> createState() => _BluetoothWaveCircleState();
+}
+
+class _BluetoothWaveCircleState extends State<BluetoothWaveCircle>
+    with SingleTickerProviderStateMixin {
+  late final AnimationController _controller;
+
+  @override
+  void initState() {
+    super.initState();
+    _controller = AnimationController(
+      vsync: this,
+      duration: const Duration(seconds: 2),
+    )..repeat();
+  }
+
+  @override
+  void dispose() {
+    _controller.dispose();
+    super.dispose();
+  }
+
+  @override
+  Widget build(BuildContext context) {
+    return SizedBox(
+      width: 230,
+      height: 230,
+      child: AnimatedBuilder(
+        animation: _controller,
+        builder: (context, child) {
+          final double progress = _controller.value;
+          return Stack(
+            alignment: Alignment.center,
+            children: [
+              // 第一圈波纹
+              _buildWaveCircle(246, progress, 0.0),
+              // 第二圈波纹（延迟一半）
+              _buildWaveCircle(246, (progress + 0.5) % 1.0, 0.3),
+              // 蓝色实心圆+图标
+              Container(
+                width: 114,
+                height: 114,
+                decoration: const BoxDecoration(
+                  color: Color(0xFF3B82F6),
+                  shape: BoxShape.circle,
+                ),
+                child: Center(
+                  child: SvgPicture.asset(
+                    '${kImgPath}bluetooth_device.svg',
+                    width: 64,
+                    height: 64,
+                  ),
+                ),
+              ),
+            ],
+          );
+        },
+      ),
+    );
+  }
+
+  /// 构建动态波纹圆圈
+  Widget _buildWaveCircle(
+    double maxDiameter,
+    double progress,
+    double opacityOffset,
+  ) {
+    final double size = 114 + (maxDiameter - 114) * progress;
+    final double opacity =
+        (1.0 - progress).clamp(0.0, 1.0) * (1.0 - opacityOffset);
+    return Opacity(
+      opacity: opacity,
+      child: Container(
+        width: size,
+        height: size,
+        decoration: BoxDecoration(
+          border: Border.all(color: const Color(0xFF60A5FA), width: 4),
+          shape: BoxShape.circle,
+        ),
+      ),
+    );
+  }
+}
