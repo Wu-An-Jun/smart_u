@@ -21,6 +21,7 @@ import 'package:test_rec/routes/smart_home_automation_page.dart';
 import 'package:test_rec/routes/smart_life_page.dart';
 import 'package:test_rec/routes/more_settings_demo_page.dart';
 import 'package:test_rec/routes/toggle_button_demo_page.dart';
+import 'package:test_rec/routes/splash_page.dart';
 
 abstract class AppPages {
   static final routes = [
@@ -48,7 +49,6 @@ abstract class AppPages {
       name: AppRoutes.aiAssistantTest,
       page: () => const AiAssistantTestPage(),
     ),
-    GetPage(name: AppRoutes.addDevice, page: () => const AddDevicePage()),
     GetPage(
       name: AppRoutes.smartHomeAutomation,
       page: () => const SmartHomeAutomationPage(),
@@ -78,5 +78,6 @@ abstract class AppPages {
       name: AppRoutes.qrCodeScanner,
       page: () => const QrCodeScannerPage(),
     ),
+    GetPage(name: AppRoutes.splash, page: () => const SplashPage()),
   ];
 }

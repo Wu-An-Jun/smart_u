@@ -203,7 +203,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               child: IconButton(
                 icon: const Icon(Icons.add, color: Color(0xFF0F172A), size: 20),
                 onPressed: () {
-                  Get.toNamed(AppRoutes.addDevice);
+                  Get.toNamed('/device-management', arguments: {'showAddDevice': true});
                 },
               ),
             ),
@@ -418,7 +418,7 @@ class _HomePageState extends State<HomePage> with TickerProviderStateMixin {
               child: _buildServiceOption(
                 icon: Icons.add_circle_outline,
                 label: '添加设备',
-                onTap: () => Get.toNamed('/add-device'),
+                onTap: () => Get.toNamed('/device-management', arguments: {'showAddDevice': true}),
               ),
             ),
           ],

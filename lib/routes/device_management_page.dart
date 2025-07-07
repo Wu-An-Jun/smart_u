@@ -11,6 +11,7 @@ import '../widgets/positioning_mode_selector.dart';
 import '../widgets/toggle_button.dart';
 import 'geofence_management_page.dart';
 import '../routes/app_routes.dart';
+import '../views/add_device_view.dart';
 
 class DeviceManagementPage extends StatefulWidget {
   const DeviceManagementPage({super.key});
@@ -35,13 +36,21 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
   // 猫咪定位器的任务列表
   final RxList<String> _tasks = <String>["宠物离开小区时给我发消息", "每天10点以后关闭定位"].obs;
 
+  // 控制是否显示添加设备界面
+  final RxBool _showAddDeviceView = false.obs;
+
   @override
   void initState() {
     super.initState();
-    controller.loadMockDevices();
+    controller.loadDevices();
+    final arguments = Get.arguments as Map<String, dynamic>?;
+    if (arguments != null && arguments['showAddDevice'] == true) {
+      WidgetsBinding.instance.addPostFrameCallback((_) {
+        _showAddDeviceView.value = true;
+      });
+    }
     
     // 检查是否需要直接显示猫咪定位器界面
-    final arguments = Get.arguments as Map<String, dynamic>?;
     if (arguments != null && arguments['showCatLocator'] == true) {
       // 延迟一帧执行，确保widget构建完成
       WidgetsBinding.instance.addPostFrameCallback((_) {
@@ -64,9 +73,9 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
 
   /// 返回原界面
   void _backToDeviceList() {
-    print('返回原界面被调用'); // 调试信息
     _showCatLocatorView.value = false;
     _showPositioningModeSelector.value = false;
+    _showAddDeviceView.value = false;
   }
 
   /// 切换远程开关状态
@@ -167,7 +176,11 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
                 }
 
                 // 根据当前状态显示不同的界面
-                if (_showPositioningModeSelector.value) {
+                if (_showAddDeviceView.value) {
+                  return AddDeviceView(
+                    onBack: _backToDeviceList,
+                  );
+                } else if (_showPositioningModeSelector.value) {
                   return _buildPositioningModeSelectorView();
                 } else if (_showCatLocatorView.value) {
                   return _buildCatLocatorView();
@@ -213,7 +226,7 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
             const Spacer(),
             // 添加按钮
             GestureDetector(
-              onTap: () => Get.toNamed('/add-device'),
+              onTap: () => _showAddDeviceView.value = true,
               child: Container(
                 width: 40,
                 height: 40,
@@ -325,7 +338,7 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
 
               // 绑定按钮
               GestureDetector(
-                onTap: () => Get.toNamed('/add-device'),
+                onTap: () => _showAddDeviceView.value = true,
                 child: Container(
                   width: double.infinity,
                   height: 50,
@@ -548,7 +561,7 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
                   title: const Text('刷新设备'),
                   onTap: () {
                     Navigator.pop(context);
-                    controller.loadMockDevices();
+                    controller.loadDevices();
                   },
                 ),
                 ListTile(
@@ -1128,6 +1141,21 @@ class _DeviceManagementPageState extends State<DeviceManagementPage> {
             ),
           ),
         ],
+      ),
+    );
+  }
+
+  /// 设备列表状态下的添加设备按钮（示例，实际请根据UI放置位置调整）
+  Widget _buildAddDeviceButton() {
+    return ElevatedButton.icon(
+      onPressed: () {
+        _showAddDeviceView.value = true;
+      },
+      icon: const Icon(Icons.add),
+      label: const Text('添加设备'),
+      style: ElevatedButton.styleFrom(
+        backgroundColor: Global.currentTheme.primaryColor,
+        foregroundColor: Colors.white,
       ),
     );
   }

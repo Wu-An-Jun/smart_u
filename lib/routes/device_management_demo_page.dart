@@ -340,7 +340,7 @@ class _DeviceManagementDemoPageState extends State<DeviceManagementDemoPage> {
 
   /// 添加模拟设备
   void _addMockDevices() {
-    controller.loadMockDevices();
+    controller.loadDevices();
   }
 
   /// 清空设备

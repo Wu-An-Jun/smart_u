@@ -386,7 +386,7 @@ class DeviceListPage extends StatelessWidget {
           TextButton(onPressed: () => Get.back(), child: const Text('取消')),
           ElevatedButton(
             onPressed: () {
-              controller.removeDevice(device.id);
+              controller.deleteDevice(device.id);
               Get.back();
             },
             style: ElevatedButton.styleFrom(backgroundColor: Colors.red),

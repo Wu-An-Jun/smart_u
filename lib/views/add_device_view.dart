@@ -5,7 +5,7 @@ import 'package:get/get.dart';
 import '../common/Global.dart';
 import '../controllers/device_controller.dart';
 import '../models/device_model.dart';
-import 'app_routes.dart';
+import '../routes/app_routes.dart';
 
 const String kImgPath = 'imgs/';
 
@@ -359,4 +359,4 @@ class AddDeviceView extends StatelessWidget {
       colorText: Colors.white,
     );
   }
-}
+} 

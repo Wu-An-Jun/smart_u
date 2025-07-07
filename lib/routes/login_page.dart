@@ -6,6 +6,7 @@ import 'package:get/get.dart';
 import 'package:test_rec/routes/app_routes.dart';
 import 'package:test_rec/widgets/agreement_dialog.dart';
 import 'package:test_rec/widgets/center_popup.dart';
+import 'package:test_rec/controllers/user_controller.dart';
 
 class LoginPage extends StatefulWidget {
   const LoginPage({super.key});
@@ -91,12 +92,12 @@ class _LoginPageState extends State<LoginPage> {
     _performLogin();
   }
 
-  void _performLogin() {
+  void _performLogin() async {
     final String phone = _phoneController.text;
     final String code = _codeController.text;
 
     if (phone.isEmpty) {
-      CenterPopup.show(context, '请输入手机号码');
+      CenterPopup.show(context, '请输入手机号');
       return;
     }
 
@@ -105,9 +106,11 @@ class _LoginPageState extends State<LoginPage> {
       return;
     }
 
-    // 验证逻辑测试
-    if (phone == '123' && code == '123') {
-      Get.offNamed(AppRoutes.main);
+    // 调用UserController登录
+    final userController = Get.find<UserController>();
+    bool success = await userController.login(phone, code);
+    if (success) {
+      Get.offAllNamed(AppRoutes.main);
     } else {
       CenterPopup.show(context, '手机号或验证码错误');
     }

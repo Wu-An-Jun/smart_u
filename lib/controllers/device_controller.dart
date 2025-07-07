@@ -2,6 +2,9 @@ import 'package:flutter/material.dart';
 import 'package:get/get.dart';
 
 import '../models/device_model.dart';
+import '../repositories/device_repository.dart';
+import '../data/device_local_data_source.dart';
+import '../data/device_remote_data_source.dart';
 
 /// 设备管理控制器
 class DeviceController extends GetxController {
@@ -11,6 +14,11 @@ class DeviceController extends GetxController {
   final RxString _error = ''.obs;
   final RxBool _isScanning = false.obs;
   final RxBool _isBluetoothScanning = false.obs;
+
+  final DeviceRepository repository = DeviceRepository(
+    localDataSource: DeviceLocalDataSource(),
+    remoteDataSource: DeviceRemoteDataSource(),
+  );
 
   // Getters
   List<DeviceModel> get devices => _devices.toList();
@@ -30,137 +38,33 @@ class DeviceController extends GetxController {
 
   /// 初始化设备数据
   Future<void> _initializeDevices() async {
-    // 默认加载3个设备
-    await _loadThreeDevices();
+    await DeviceLocalDataSource.initialize();
+    _loadDevicesFromRepository();
   }
 
-  /// 加载3个默认设备
-  Future<void> _loadThreeDevices() async {
-    try {
-      _setLoading(true);
-      _clearError();
-
-      // 模拟网络延迟
-      await Future.delayed(const Duration(milliseconds: 0));
-
-      _devices.assignAll([
-        // 智能灯光
-        DeviceModel(
-          id: 'smart_light_001',
-          name: '客厅智能灯',
-          type: DeviceType.light,
-          category: DeviceCategory.living,
-          isOnline: true,
-          lastSeen: DateTime.now().subtract(const Duration(minutes: 2)),
-          description: '客厅照明',
-        ),
-        // 智能开关
-        DeviceModel(
-          id: 'smart_switch_001',
-          name: '卧室智能开关',
-          type: DeviceType.smartSwitch,
-          category: DeviceCategory.living,
-          isOnline: true,
-          lastSeen: DateTime.now().subtract(const Duration(minutes: 5)),
-          description: '卧室开关控制',
-        ),
-        // 宠物定位器
-        DeviceModel(
-          id: 'pet_tracker_001',
-          name: '猫咪定位器',
-          type: DeviceType.petTracker,
-          category: DeviceCategory.pet,
-          isOnline: true,
-          lastSeen: DateTime.now().subtract(const Duration(minutes: 1)),
-          description: '宠物定位',
-        ),
-      ]);
-    } catch (e) {
-      _setError(e.toString());
-    } finally {
-      _setLoading(false);
-    }
-  }
-
-  /// 加载模拟设备数据
-  Future<void> loadMockDevices() async {
-    try {
-      _setLoading(true);
-      _clearError();
-
-      // 创建模拟设备数据
-      final mockDevices = [
-        // 宠物类设备
-        DeviceModel(
-          id: 'pet_tracker_001',
-          name: '猫咪定位器',
-          type: DeviceType.petTracker,
-          category: DeviceCategory.pet,
-          isOnline: true,
-          lastSeen: DateTime.now().subtract(const Duration(minutes: 5)),
-          description: '深圳市万象城',
-        ),
-        DeviceModel(
-          id: 'pet_tracker_002',
-          name: '狗狗定位器',
-          type: DeviceType.petTracker,
-          category: DeviceCategory.pet,
-          isOnline: true,
-          lastSeen: DateTime.now().subtract(const Duration(minutes: 2)),
-          description: '深圳市万象城',
-        ),
-
-        // 生活类设备
-        DeviceModel(
-          id: 'smart_switch_001',
-          name: '路由器开关',
-          type: DeviceType.smartSwitch,
-          category: DeviceCategory.living,
-          isOnline: true,
-          lastSeen: DateTime.now().subtract(const Duration(minutes: 1)),
-          description: '智能插座',
-        ),
-        // 地图设备
-        DeviceModel(
-          id: 'map_001',
-          name: '家庭地图',
-          type: DeviceType.map,
-          category: DeviceCategory.navigation,
-          isOnline: true,
-          lastSeen: DateTime.now(),
-          description: '智能地图',
-        ),
-      ];
-
-      _devices.value = mockDevices;
-    } catch (e) {
-      _setError(e.toString());
-    } finally {
-      _setLoading(false);
-    }
+  /// 从Repository加载设备
+  void _loadDevicesFromRepository() {
+    final devices = repository.getAllDevices();
+    _devices.assignAll(devices);
   }
 
   /// 加载设备列表
+  @override
   Future<void> loadDevices() async {
-    await loadMockDevices();
+    _loadDevicesFromRepository();
   }
 
   /// 添加设备
+  @override
   Future<void> addDevice(DeviceModel device) async {
     try {
       _setLoading(true);
       _clearError();
-
-      // 检查设备是否已存在
       if (_devices.any((d) => d.id == device.id)) {
         throw Exception('设备已存在');
       }
-
-      _devices.add(device);
-
-      // 模拟网络同步
-      await Future.delayed(const Duration(milliseconds: 500));
-
+      await repository.saveDevice(device);
+      _loadDevicesFromRepository();
       Get.snackbar(
         '成功',
         '设备添加成功',
@@ -181,21 +85,17 @@ class DeviceController extends GetxController {
   }
 
   /// 更新设备信息
+  @override
   Future<void> updateDevice(String deviceId, DeviceModel updatedDevice) async {
     try {
       _setLoading(true);
       _clearError();
-
       final index = _devices.indexWhere((d) => d.id == deviceId);
       if (index == -1) {
         throw Exception('设备不存在');
       }
-
-      _devices[index] = updatedDevice;
-
-      // 模拟网络同步
-      await Future.delayed(const Duration(milliseconds: 500));
-
+      await repository.saveDevice(updatedDevice);
+      _loadDevicesFromRepository();
       Get.snackbar(
         '成功',
         '设备信息已更新',
@@ -216,16 +116,13 @@ class DeviceController extends GetxController {
   }
 
   /// 删除设备
-  Future<void> removeDevice(String deviceId) async {
+  @override
+  Future<void> deleteDevice(String deviceId) async {
     try {
       _setLoading(true);
       _clearError();
-
-      _devices.removeWhere((d) => d.id == deviceId);
-
-      // 模拟网络同步
-      await Future.delayed(const Duration(milliseconds: 500));
-
+      await repository.deleteDevice(deviceId);
+      _loadDevicesFromRepository();
       Get.snackbar(
         '成功',
         '设备已删除',
@@ -278,7 +175,7 @@ class DeviceController extends GetxController {
 
   /// 刷新设备列表
   Future<void> refreshDevices() async {
-    await loadMockDevices();
+    await loadDevices();
   }
 
   /// 开始扫描设备
@@ -286,10 +183,8 @@ class DeviceController extends GetxController {
     try {
       _setScanning(true);
       _clearError();
-
       // 模拟扫描过程
       await Future.delayed(const Duration(seconds: 3));
-
       // 模拟发现新设备
       final discoveredDevice = DeviceModel(
         id: 'discovered_${DateTime.now().millisecondsSinceEpoch}',
@@ -300,9 +195,7 @@ class DeviceController extends GetxController {
         lastSeen: DateTime.now(),
         description: '扫描发现的设备',
       );
-
-      _devices.add(discoveredDevice);
-
+      await addDevice(discoveredDevice);
       Get.snackbar(
         '发现设备',
         '找到新设备：${discoveredDevice.name}',
@@ -314,6 +207,11 @@ class DeviceController extends GetxController {
     } finally {
       _setScanning(false);
     }
+  }
+
+  /// 停止扫描设备
+  void stopScanning() {
+    _setScanning(false);
   }
 
   /// 清除错误
